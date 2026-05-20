@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>公共 小テスト</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  font-family:"Yu Gothic",sans-serif;
+}
+
+body{
+  margin:0;
+  background:linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+
+.container{
+  width:100%;
+  max-width:900px;
+  background:rgba(255,255,255,0.08);
+  backdrop-filter:blur(12px);
+  border-radius:24px;
+  padding:30px;
+  box-shadow:0 0 30px rgba(0,0,0,0.35);
+}
+
+h1{
+  text-align:center;
+  margin-top:0;
+}
+
+.section-buttons,
+.mode-buttons{
+  display:grid;
+  gap:15px;
+  margin-top:25px;
+}
+
+.section-buttons button,
+.mode-buttons button{
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  font-size:1rem;
+  font-weight:bold;
+  cursor:pointer;
+  background:#38bdf8;
+  color:white;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:scale(1.02);
+}
+
+.hidden{
+  display:none;
+}
+
+.question-count{
+  opacity:0.8;
+  margin-bottom:15px;
+}
+
+.question{
+  font-size:1.4rem;
+  line-height:1.8;
+  margin-bottom:25px;
+  min-height:100px;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  font-size:1rem;
+  margin-bottom:20px;
+}
+
+.choice-grid{
+  display:grid;
+  gap:15px;
+}
+
+.choice-btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  background:#334155;
+  color:white;
+  font-size:1rem;
+  cursor:pointer;
+}
+
+.feedback{
+  margin-top:20px;
+  font-size:1.2rem;
+  font-weight:bold;
+  text-align:center;
+}
+
+.correct{
+  color:#4ade80;
+}
+
+.wrong{
+  color:#f87171;
+}
+
+.next-btn{
+  margin-top:20px;
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:12px;
+  background:#38bdf8;
+  color:white;
+  font-size:1rem;
+  cursor:pointer;
+}
+
+.result{
+  text-align:center;
+}
+
+.score{
+  font-size:2rem;
+  margin:25px 0;
+}
+
+.mistake-box{
+  margin-top:30px;
+  background:rgba(255,255,255,0.08);
+  border-radius:18px;
+  padding:20px;
+  text-align:left;
+}
+
+.mistake-item{
+  margin-bottom:20px;
+  padding-bottom:15px;
+  border-bottom:1px solid rgba(255,255,255,0.15);
+}
+
+.label{
+  color:#7dd3fc;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div id="start-screen">
+<h1>高2 公共 小テスト</h1>
+
+<h2>セクション選択</h2>
+
+<div class="section-buttons">
+<button onclick="selectSection('section1')">
+セクション1 青年期とは何か
+</button>
+
+<button onclick="selectSection('section2')">
+セクション2 欲望と防衛機制
+</button>
+
+<button onclick="selectSection('section3')">
+セクション3 アイデンティティの確立
+</button>
+
+<button onclick="selectSection('section4')">
+セクション4 現代社会と青年期
+</button>
+</div>
+
+<div id="mode-select" class="hidden">
+<h2>出題形式</h2>
+
+<div class="mode-buttons">
+<button onclick="startQuiz('write')">記述問題</button>
+<button onclick="startQuiz('choice')">4択問題</button>
+</div>
+</div>
+</div>
+
+<div id="quiz-screen" class="hidden">
+
+<div class="question-count" id="question-count"></div>
+
+<div class="question" id="question"></div>
+
+<div id="write-area">
+<input type="text" id="answer" placeholder="答えを入力">
+<button onclick="submitWriteAnswer()">回答する</button>
+</div>
+
+<div id="choice-area" class="choice-grid"></div>
+
+<div id="feedback" class="feedback"></div>
+
+<button id="next-btn" class="next-btn hidden" onclick="nextQuestion()">
+次の問題へ
+</button>
+
+</div>
+
+<div id="result-screen" class="hidden result">
+
+<h1>結果</h1>
+
+<div class="score" id="score"></div>
+
+<div id="mistakes"></div>
+
+<button class="next-btn" onclick="location.reload()">
+もう一度
+</button>
+
+</div>
+
+</div>
+
+<script>
+
+const allQuestions = {
+
+section1:[
+{
+q:"人間は生まれながらにして自由だと説いた啓蒙思想家は？",
+a:"ルソー"
+},
+{
+q:"青年期に自我が芽生え、精神的に大人へ成長することを何という？",
+a:"第二の誕生"
+},
+{
+q:"思春期に起こる身体的な急激な変化を何という？",
+a:"第二次性徴"
+},
+{
+q:"自分を客観的に意識し始める青年期特有の心の変化を何という？",
+a:"自我の目覚め"
+},
+{
+q:"青年期を『マージナルマン』と説明した心理学者は？",
+a:"レヴィン"
+},
+{
+q:"子どもと大人の中間にある不安定な存在を何という？",
+a:"マージナル・マン"
+},
+{
+q:"他者の反応を鏡のように受け取り、自分像を形成する考え方は？",
+a:"鏡映的自己"
+},
+{
+q:"親から精神的に自立しようとする青年期の過程は？",
+a:"心理的離乳"
+},
+{
+q:"自立を求めて大人に反発しやすくなる時期は？",
+a:"第二次反抗期"
+}
+],
+
+section2:[
+{
+q:"複数の欲求がぶつかり、迷う状態を何という？",
+a:"葛藤"
+},
+{
+q:"欲求が満たされずイライラする状態を何という？",
+a:"欲求不満"
+},
+{
+q:"無意識の働きを重視した精神分析学者は？",
+a:"フロイト"
+},
+{
+q:"不安や葛藤から自分を守る無意識の働きは？",
+a:"防衛機制"
+},
+{
+q:"人間の欲求を5段階に整理した心理学者は？",
+a:"マズロー"
+},
+{
+q:"自分の能力を最大限に発揮しようとする欲求は？",
+a:"自己実現の欲求"
+}
+],
+
+section3:[
+{
+q:"その人らしさをつくる心の特徴のまとまりを何という？",
+a:"パーソナリティ"
+},
+{
+q:"自分らしさを確立していく過程は？",
+a:"個性化"
+},
+{
+q:"社会のルールや価値観を身につけることは？",
+a:"社会化"
+},
+{
+q:"行動や感情の傾向など比較的安定した特徴は？",
+a:"性格"
+},
+{
+q:"学習や経験で身につけた理解や能力は？",
+a:"知識・技能"
+},
+{
+q:"性格を内向型・外向型に分類した心理学者は？",
+a:"ユング"
+},
+{
+q:"内面に関心が向く型と外界に関心が向く型をまとめて何という？",
+a:"内向型・外向型"
+},
+{
+q:"青年期の課題を『アイデンティティの確立』とした心理学者は？",
+a:"エリクソン"
+},
+{
+q:"自分は何者かを理解し確かな自分像を持つことは？",
+a:"アイデンティティの確立"
+},
+{
+q:"自分が一貫した存在だと感じられる状態は？",
+a:"自我同一性"
+},
+{
+q:"自分が何者かわからず方向性を失っている状態は？",
+a:"アイデンティティの拡散"
+}
+],
+
+section4:[
+{
+q:"大人の責任を一時的に猶予され進路を探す期間は？",
+a:"心理・社会的モラトリアム"
+},
+{
+q:"子どもから大人へ移行する際の儀式を何という？",
+a:"通過儀礼"
+},
+{
+q:"社会的責任を保留し将来を模索する期間は？",
+a:"モラトリアム"
+},
+{
+q:"大人の責任を避け猶予状態にとどまる人は？",
+a:"モラトリアム人間"
+},
+{
+q:"大人になることを拒み子どものままでいたい心理状態は？",
+a:"ピーターパン・シンドローム"
+},
+{
+q:"若者がつくる独自文化は？",
+a:"ユース・カルチャー"
+},
+{
+q:"主流文化とは異なる独自文化は？",
+a:"サブ・カルチャー"
+}
+]
+
+};
+
+let currentSection = [];
+let currentQuestion = 0;
+let score = 0;
+let mode = "";
+let mistakes = [];
+
+function selectSection(section){
+  currentSection = [...allQuestions[section]];
+  shuffle(currentSection);
+
+  document.getElementById("mode-select").classList.remove("hidden");
+}
+
+function startQuiz(selectedMode){
+
+  mode = selectedMode;
+
+  document.getElementById("start-screen").classList.add("hidden");
+  document.getElementById("quiz-screen").classList.remove("hidden");
+
+  showQuestion();
+}
+
+function showQuestion(){
+
+  document.getElementById("feedback").innerHTML = "";
+  document.getElementById("next-btn").classList.add("hidden");
+
+  const q = currentSection[currentQuestion];
+
+  document.getElementById("question-count").innerHTML =
+  `問題 ${currentQuestion+1} / ${currentSection.length}`;
+
+  document.getElementById("question").innerHTML = q.q;
+
+  if(mode === "write"){
+
+    document.getElementById("write-area").classList.remove("hidden");
+    document.getElementById("choice-area").classList.add("hidden");
+
+    document.getElementById("answer").value = "";
+    document.getElementById("answer").focus();
+
+  }else{
+
+    document.getElementById("write-area").classList.add("hidden");
+    document.getElementById("choice-area").classList.remove("hidden");
+
+    generateChoices(q);
+  }
+
+}
+
+function submitWriteAnswer(){
+
+  const user =
+  document.getElementById("answer").value
+  .trim()
+  .replace(/・/g,"")
+  .replace(/-/g,"")
+  .replace(/\s/g,"");
+
+  const correct =
+  currentSection[currentQuestion].a
+  .replace(/・/g,"")
+  .replace(/-/g,"")
+  .replace(/\s/g,"");
+
+  judgeAnswer(user === correct,user);
+}
+
+function generateChoices(q){
+
+  let choices = [q.a];
+
+  while(choices.length < 4){
+
+    const random =
+    currentSection[Math.floor(Math.random()*currentSection.length)].a;
+
+    if(!choices.includes(random)){
+      choices.push(random);
+    }
+  }
+
+  shuffle(choices);
+
+  let html = "";
+
+  choices.forEach(choice=>{
+
+    html += `
+    <button class="choice-btn"
+    onclick="judgeChoice('${choice}')">
+    ${choice}
+    </button>
+    `;
+
+  });
+
+  document.getElementById("choice-area").innerHTML = html;
+}
+
+function judgeChoice(choice){
+
+  const correct = currentSection[currentQuestion].a;
+
+  judgeAnswer(choice === correct,choice);
+}
+
+function judgeAnswer(isCorrect,userAnswer){
+
+  const feedback = document.getElementById("feedback");
+
+  if(isCorrect){
+
+    score++;
+
+    feedback.innerHTML =
+    `<span class="correct">○ 正解！</span>`;
+
+  }else{
+
+    feedback.innerHTML =
+    `<span class="wrong">× 不正解<br>
+    正解：${currentSection[currentQuestion].a}</span>`;
+
+    mistakes.push({
+      q:currentSection[currentQuestion].q,
+      user:userAnswer,
+      correct:currentSection[currentQuestion].a
+    });
+  }
+
+  document.getElementById("next-btn").classList.remove("hidden");
+}
+
+function nextQuestion(){
+
+  currentQuestion++;
+
+  if(currentQuestion < currentSection.length){
+
+    showQuestion();
+
+  }else{
+
+    showResult();
+  }
+
+}
+
+function showResult(){
+
+  document.getElementById("quiz-screen").classList.add("hidden");
+  document.getElementById("result-screen").classList.remove("hidden");
+
+  const percent =
+  Math.round(score/currentSection.length*100);
+
+  document.getElementById("score").innerHTML =
+  `${score} / ${currentSection.length}<br>${percent}%`;
+
+  let html = "";
+
+  if(mistakes.length > 0){
+
+    html += `<div class="mistake-box">
+    <h2>間違えた問題</h2>`;
+
+    mistakes.forEach(m=>{
+
+      html += `
+      <div class="mistake-item">
+
+      <div>
+      <span class="label">問題：</span>
+      ${m.q}
+      </div>
+
+      <div>
+      <span class="label">あなたの回答：</span>
+      ${m.user}
+      </div>
+
+      <div>
+      <span class="label">正解：</span>
+      ${m.correct}
+      </div>
+
+      </div>
+      `;
+
+    });
+
+    html += `</div>`;
+
+  }else{
+
+    html =
+    `<div class="mistake-box">
+    全問正解！
+    </div>`;
+  }
+
+  document.getElementById("mistakes").innerHTML = html;
+}
+
+function shuffle(array){
+
+  for(let i=array.length-1;i>0;i--){
+
+    const j=Math.floor(Math.random()*(i+1));
+
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+}
+
+window.addEventListener("keydown",(e)=>{
+
+  if(e.key==="Enter"){
+
+    const quizVisible =
+    !document.getElementById("quiz-screen")
+    .classList.contains("hidden");
+
+    const nextVisible =
+    !document.getElementById("next-btn")
+    .classList.contains("hidden");
+
+    if(mode==="write" && quizVisible){
+
+      if(nextVisible){
+
+        nextQuestion();
+
+      }else{
+
+        submitWriteAnswer();
+      }
+    }
+  }
+});
+
+</script>
+
+</body>
+</html>
